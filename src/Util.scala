@@ -1,6 +1,7 @@
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 import java.io.{File, FileInputStream, FileOutputStream}
+import java.nio.file.{Files, Paths}
 import scala.annotation.tailrec
 import scala.util.Try
 object Util {
@@ -55,6 +56,40 @@ object Util {
                               azul: Int,
                               contador: Int
                             )
+
+// Funciones propias
+  /**
+   * Función para invertir la lista de píxeles
+   * @param list(List[Pixel]) lista de píxeles a invertir
+   * @param acc(List[Pixel]) acumulador que lleva la lista invertir hasta el momento
+   * @return (List[Pixel]) lista resultado
+   */
+  @tailrec
+  def reverseLista(list: List[Pixel], acc: List[Pixel]): List[Pixel] = {
+    list match {
+      case Nil => acc
+      case head::tail => reverseLista(tail, head :: acc)
+    }
+  }
+
+  @tailrec
+  def reverseImagen(list: List[List[Pixel]], acc: List[List[Pixel]] = Nil): List[List[Pixel]] = {
+    list match {
+      case Nil => acc
+      case head :: tail => reverseImagen(tail, reverseLista(head, Nil) :: acc)
+    }
+  }
+  def esBMPValido(ruta: String): Boolean = {
+    val archivo = new File(ruta)
+
+    // Verifica existencia, tipo de archivo y extensión
+    val condicionesCumplidas = archivo.exists() &&
+      archivo.isFile &&
+      ruta.toLowerCase.endsWith(".bmp") &&
+      Files.isReadable(Paths.get(ruta))
+
+    condicionesCumplidas
+  }
 
   /**
    * Función para leer una imagen BMP desde una ruta
@@ -112,20 +147,87 @@ object Util {
       }
     }
 
+    reverseLista(bucle(0, Nil), Nil)  //se invierte ya que las imágenes BMP se leen al revés
+  }
+
+  def escribirImagenBMP(imagenData: ImageData, rutaDestino: String): Boolean = {
+    Try {
+      val bufferedImage = new BufferedImage(
+        imagenData.ancho,
+        imagenData.alto,
+        BufferedImage.TYPE_INT_RGB
+      )
+
+      // Función tail-rec para procesar filas
+      @tailrec
+      def procesarFilas(y: Int): Unit = {
+        if (y < imagenData.alto) {
+          procesarPixelesEnFila(y, 0)
+          procesarFilas(y + 1)
+        }
+      }
+
+      // Función tail-rec para procesar píxeles en una fila
+      @tailrec
+      def procesarPixelesEnFila(y: Int, x: Int): Unit = {
+        if (x < imagenData.ancho) {
+          val pixel = imagenData.pixeles(y)(x)
+          val rgb = (pixel.r << 16) | (pixel.g << 8) | pixel.b
+          bufferedImage.setRGB(x, y, rgb)
+          procesarPixelesEnFila(y, x + 1)
+        }
+      }
+
+      // Inicia el procesamiento desde la fila 0
+      procesarFilas(0)
+
+      // Guarda la imagen
+      ImageIO.write(bufferedImage, "bmp", new File(rutaDestino))
+    }.isSuccess
+  }
+
+  /**
+   * Convierte una imagen a blanco y negro usando recursión por la cola.
+   * @param imagenData Imagen original en formato ImageData.
+   * @return Nueva ImageData en escala de grises.
+   */
+  def convertirABlancoYNegro(imagenData: ImageData): ImageData = {
     /**
-     * Función para invertir la lista de píxeles
-     * @param list(List[Pixel]) lista de píxeles a invertir
-     * @param acc(List[Pixel]) acumulador que lleva la lista invertir hasta el momento
-     * @return (List[Pixel]) lista resultado
+     * Aplica la fórmula de luminancia a un píxel.
+     */
+    def calcularGris(pixel: Pixel): Pixel = {
+      val gris = (0.299f * pixel.r + 0.587f * pixel.g + 0.114f * pixel.b).toInt
+      Pixel(gris, gris, gris)
+    }
+
+    /**
+     * Procesa una fila de píxeles (tail-rec).
      */
     @tailrec
-    def reverse(list: List[Pixel], acc: List[Pixel]): List[Pixel] = {
-      list match {
-        case Nil => acc
-        case head::tail => reverse(tail, head :: acc)
+    def procesarFila(pixeles: List[Pixel], acc: List[Pixel]): List[Pixel] = {
+      pixeles match {
+        case Nil => reverseLista(acc,Nil)  // Invertir para mantener el orden original
+        case head :: tail =>
+          procesarFila(tail, calcularGris(head) :: acc)
       }
     }
 
-    reverse(bucle(0, Nil), Nil)  //se invierte ya que las imágenes BMP se leen al revés
+    /**
+     * Procesa todas las filas (tail-rec).
+     */
+    @tailrec
+    def procesarFilas(filas: List[List[Pixel]], acc: List[List[Pixel]]): List[List[Pixel]] = {
+      filas match {
+        case Nil => reverseImagen(acc,Nil)
+        case head :: tail =>
+          procesarFilas(tail, procesarFila(head, Nil) :: acc)
+      }
+    }
+
+    ImageData(
+      imagenData.ancho,
+      imagenData.alto,
+      procesarFilas(imagenData.pixeles, Nil)
+    )
   }
 }
