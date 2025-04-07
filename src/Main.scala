@@ -22,8 +22,8 @@ object Main {
         ruta
       }
     }
-
   }
+
   def menu(): Unit = {
     println("Opciones:")
     println("\t\t(1). Convertir a Blanco y Negro")
@@ -31,26 +31,47 @@ object Main {
     println("\t\t(3). Filtrar Colores")
     println("\t\t(4). Salir")
   }
+
   def main(args: Array[String]): Unit = {
     val ruta = pedir_ruta()
     val tryImagen: Try[ImageData] = leerImagenBMP(ruta)
 
-    val tryImagenBN: Try[ImageData] = tryImagen match {
-      case Success(imagen) => Success(convertirABlancoYNegro(imagen))
-      case failure@Failure(_) => failure
-    }
-
-    tryImagenBN match {
-      case Success(imagenBN) =>
-        val rutaSalida = "bn_" + new java.io.File(ruta).getName
-        if (escribirImagenBMP(imagenBN, rutaSalida)) {
-          println(s"Imagen en blanco y negro guardada como: $rutaSalida")
-        } else {
-          println("Error al guardar la imagen")
+    menu()
+    val opcion = StdIn.readInt()
+    opcion match {
+      case 1 => { //Caso Blanco y Negro
+        val tryImagenBN: Try[ImageData] = tryImagen match {
+          case Success(imagen) => Success(convertirABlancoYNegro(imagen))
+          case failure@Failure(_) => failure
         }
 
-      case Failure(e) =>
-        println(s"Error al procesar la imagen: ${e.getMessage}")
+        tryImagenBN match {
+          case Success(imagenBN) =>
+            val rutaSalida = "./img/bn_" + new java.io.File(ruta).getName
+            if (escribirImagenBMP(imagenBN, rutaSalida)) {
+              println(s"Imagen en blanco y negro guardada como: $rutaSalida")
+            } else {
+              println("Error al guardar la imagen")
+            }
+
+          case Failure(e) =>
+            println(s"Error al procesar la imagen: ${e.getMessage}")
+        }
+      }
+      case 2 => { // Caso Pixelar
+        println("Opcion 2 elegida")
+      }
+      case 3 => { // Caso Filtrar Colores
+        println("Opcion 3 elegida")
+      }
+      case 4 => { // Salir
+        println("Saliendo...")
+        System.exit(0)
+      }
+      case _ => {
+        println("No se reconoce el caracter introducido")
+        System.exit(0) // Por ahora, hay que introducir el bucle
+      }
     }
   }
 }

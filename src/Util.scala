@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 import scala.util.Try
 object Util {
 
-  val IMAGEN_DEFECTO = "../img/squirtle_squad_BMP_00.bmp"
+  val IMAGEN_DEFECTO = "./img/squirtle_squad_BMP_00.bmp"
 
   /**
    * Clase para representar la estructura de una cabecera de un
@@ -147,7 +147,7 @@ object Util {
       }
     }
 
-    reverseLista(bucle(0, Nil), Nil)  //se invierte ya que las imágenes BMP se leen al revés
+    bucle(0, Nil)  //se invierte ya que las imágenes BMP se leen al revés
   }
 
   def escribirImagenBMP(imagenData: ImageData, rutaDestino: String): Boolean = {
@@ -187,7 +187,7 @@ object Util {
   }
 
   /**
-   * Convierte una imagen a blanco y negro usando recursión por la cola.
+   * Convierte una imagen a blanco y negro usando recursión.
    * @param imagenData Imagen original en formato ImageData.
    * @return Nueva ImageData en escala de grises.
    */
