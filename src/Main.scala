@@ -5,8 +5,9 @@ import scala.util.{Failure, Success, Try}
 
 object Main {
   def pedir_ruta(): String = {
-    println(s"El directorio actual es: $IMAGEN_DEFECTO")
+    println(s"El directorio actual es: ${System.getProperty("user.dir")}")
     println(s"Introduzca la ruta de la imagen: \n(Pulse Enter para ruta por defecto): $IMAGEN_DEFECTO")
+
 
     val ruta = StdIn.readLine()
 
@@ -47,7 +48,7 @@ object Main {
 
         tryImagenBN match {
           case Success(imagenBN) =>
-            val rutaSalida = "./img/bn_" + new java.io.File(ruta).getName
+            val rutaSalida = "../img/bn_" + new java.io.File(ruta).getName
             if (escribirImagenBMP(imagenBN, rutaSalida)) {
               println(s"Imagen en blanco y negro guardada como: $rutaSalida")
             } else {
@@ -59,7 +60,32 @@ object Main {
         }
       }
       case 2 => { // Caso Pixelar
-        println("Opcion 2 elegida")
+        println("Opción 2 elegida")
+        println("Elija el tamaño de pixelado: ")
+        val tamPixelado = StdIn.readInt()
+        val tryImagenPixelada: Try[ImageData] = tryImagen match {
+          case Success(imagen) => Success(pixelar(imagen, tamPixelado))
+          case failure@Failure(_) => failure
+        }
+
+        tryImagenPixelada match {
+          case Success(imagenPixelada) =>
+            if (imagenPixelada.pixeles.exists(_.isEmpty)) {
+              println("Error: Hay filas vacías en la imagen pixelada.")
+            }
+            println("No tiene filas vacías ")
+            print("Dimensiones imagen pixelada: " + imagenPixelada.ancho + "x" + imagenPixelada.alto)
+            val rutaSalida = "../img/pixelada_" + new java.io.File(ruta).getName
+            if (escribirImagenBMP(imagenPixelada, rutaSalida)) {
+              println(s"Imagen pixelada guardada como: $rutaSalida")
+            } else {
+              println("Error al guardar la imagen")
+            }
+
+          case Failure(e) =>
+            println(s"Error al procesar la imagen: ${e.getMessage}")
+        }
+
       }
       case 3 => { // Caso Filtrar Colores
         println("Opcion 3 elegida")
