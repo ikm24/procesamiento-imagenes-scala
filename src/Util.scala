@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 import scala.util.Try
 object Util {
 
-  val IMAGEN_DEFECTO = "../img/squirtle_squad_BMP_00.bmp"
+  val IMAGEN_DEFECTO = "./img/squirtle_squad_BMP_00.bmp"
 
   /**
    * Clase para representar la estructura de una cabecera de un
@@ -359,27 +359,22 @@ object Util {
      */
     @tailrec
     def calcularColoresPromedio(y: Int, x: Int, acc: List[List[Pixel]]): List[List[Pixel]] = {
-      if (y >= alto) acc                                                      //si nos pasamos de los límites devolver el acumulador
-      // si nos pasamos de los límites en la fila, ir a la siguiente fila
+      if (y >= alto) acc
       else if (x >= ancho) calcularColoresPromedio(y + tamanoPixel, 0, acc)
-      // si nos pasamos de los límites en la columna, ir a la siguiente columna
-      else if (x + tamanoPixel > ancho) calcularColoresPromedio(y, x + tamanoPixel, acc)
       else {
-        // Calcular el color promedio del bloque
-        val colorPromedio = calcularColorMedioBloque(x, y, tamanoPixel, imagenData)
-        // Si es el primer bloque, inicializar la fila
-        // Si no es el primer bloque, agregar el color promedio al inicio de la fila
-        val nuevaFila = if (x == 0) List(colorPromedio) else acc.head match {
-          case existente :: resto => colorPromedio :: existente :: resto
-          case Nil => List(colorPromedio)
-        }
+        // Ajustar el tamaño del bloque si excede los límites
+        val bloqueAncho = Math.min(tamanoPixel, ancho - x)
+        val bloqueAlto = Math.min(tamanoPixel, alto - y)
 
-        // Actualizar el acumulador con la nueva fila
+        val colorPromedio = calcularColorMedioBloque(x, y, bloqueAncho, bloqueAlto, imagenData)
+
+        val nuevaFila = if (x == 0) List(colorPromedio) else acc.head :+ colorPromedio
         val nuevoAcc = if (x == 0) nuevaFila :: acc else nuevaFila :: acc.tail
 
         calcularColoresPromedio(y, x + tamanoPixel, nuevoAcc)
       }
     }
+
 
     /**
      * Expande los colores promedio a bloques completos en la imagen.
@@ -392,18 +387,16 @@ object Util {
       coloresPromedio match {
         case Nil => accFilas
         case filaColores :: restoFilas =>
-          // Expandir esta fila de colores a varias filas de píxeles
           val filasExpandidas = expandirFilaVertical(filaColores, tamanoPixel, Nil)
-          expandirImagenPixelada(restoFilas, concat(accFilas, filasExpandidas))
+          expandirImagenPixelada(restoFilas, concat(accFilas,filasExpandidas))
       }
     }
 
     /**
-     * Expande una fila de colores promedio verticalmente.
-     * @param filaColores Fila de colores promedio.
-     * @param alturaRestante Altura restante para expandir.
+     * Expande los colores promedio a bloques completos en la imagen.
+     * @param coloresPromedio Lista de colores promedio por bloque.
      * @param accFilas Acumulador de filas expandidas.
-     * @return Lista de filas expandidas verticalmente.
+     * @return Lista de listas de píxeles con los bloques expandidos.
      */
     @tailrec
     def expandirFilaVertical(filaColores: List[Pixel], alturaRestante: Int, accFilas: List[List[Pixel]]): List[List[Pixel]] = {
@@ -417,8 +410,9 @@ object Util {
     /**
      * Expande una fila de colores promedio horizontalmente.
      * @param filaColores Fila de colores promedio.
-     * @param accFila Acumulador de píxeles expandidos horizontalmente.
-     * @return Fila expandida horizontalmente.
+     * @param alturaRestante Altura restante para expandir.
+     * @param accFilas Acumulador de filas expandidas.
+     * @return Lista de filas expandidas horizontalmente.
      */
     @tailrec
     def expandirFilaHorizontal(filaColores: List[Pixel], accFila: List[Pixel]): List[Pixel] = {
@@ -443,37 +437,10 @@ object Util {
       else repetirPixel(pixel, cantidad - 1, pixel :: acc)
     }
 
-    /**
-     * Recorta la imagen expandida a las dimensiones originales.
-     * @param imagenExpandida Imagen expandida con bloques.
-     * @param accFilas Acumulador de filas recortadas.
-     * @return Lista de listas de píxeles recortada a las dimensiones originales.
-     */
-    @tailrec
-    def recortarImagen(imagenExpandida: List[List[Pixel]], accFilas: List[List[Pixel]] = Nil): List[List[Pixel]] = {
-      if (longitud_lista(accFilas) >= alto) {
-        // Ya tenemos suficientes filas, recortamos y terminamos
-        val filasRecortadas = toma(alto, accFilas)
-        filasRecortadas
-      } else imagenExpandida match {
-        case Nil => accFilas
-        case fila :: restoFilas =>
-          // Recortar esta fila al ancho correcto
-          val filaRecortada = if (longitud_lista(fila) > ancho) toma(ancho, fila) else fila
-          recortarImagen(restoFilas, filaRecortada :: accFilas)
-      }
-    }
-
-    // Calcular colores promedio para cada bloque
     val coloresPromedio = calcularColoresPromedio(0, 0, Nil)
-
-    // Expandir colores promedio a bloques completos
     val imagenExpandida = expandirImagenPixelada(coloresPromedio)
 
-    // Recortar a dimensiones originales
-    val imagenFinal = recortarImagen(imagenExpandida)
-
-    ImageData(ancho, alto, imagenFinal)
+    ImageData(ancho, alto, reverseImagen(imagenExpandida))
   }
 
   /**
@@ -484,28 +451,20 @@ object Util {
    * @param imagenData Datos de la imagen original.
    * @return Pixel con el color promedio del bloque.
    */
-  def calcularColorMedioBloque(startX: Int, startY: Int, tamano: Int, imagenData: ImageData): Pixel = {
-    val ancho = imagenData.ancho
-    val alto = imagenData.alto
-
+  def calcularColorMedioBloque(startX: Int, startY: Int, bloqueAncho: Int, bloqueAlto: Int, imagenData: ImageData): Pixel = {
     @tailrec
-    def sumaBloque(y: Int, x: Int, rSum: Int, vSum: Int, aSum: Int, contador: Int): (Int, Int, Int, Int) = {
-      // Si nos pasamos de los límites de la imagen en el alto, devolver los contadoresa acumulados
-      if(y >= startY + tamano || y >= alto) (rSum, vSum, aSum, contador)
-      // Si nos pasamos de los límites de la imagen en el ancho, pasar a la siguiente fila
-      else if(x >= startX + tamano || x >= ancho)  sumaBloque(y + 1, startX, rSum, vSum, aSum, contador)
-      // Sino, procesar el píxel actual
+    def sumaBloque(y: Int, x: Int, rSum: Int, gSum: Int, bSum: Int, contador: Int): (Int, Int, Int, Int) = {
+      if (y >= startY + bloqueAlto) (rSum, gSum, bSum, contador)
+      else if (x >= startX + bloqueAncho) sumaBloque(y + 1, startX, rSum, gSum, bSum, contador)
       else {
         val pixel = imagenData.pixeles(y)(x)
-        sumaBloque(y, x + 1, rSum + pixel.r, vSum + pixel.g, aSum + pixel.b, contador + 1)
+        sumaBloque(y, x + 1, rSum + pixel.r, gSum + pixel.g, bSum + pixel.b, contador + 1)
       }
     }
 
-    val (rSum, vSum, aSum, contador) = sumaBloque(startY, startX, 0, 0, 0, 0)
-
-    if (contador > 0) Pixel(rSum / contador, vSum / contador, aSum / contador)
+    val (rSum, gSum, bSum, contador) = sumaBloque(startY, startX, 0, 0, 0, 0)
+    if (contador > 0) Pixel(rSum / contador, gSum / contador, bSum / contador)
     else Pixel(0, 0, 0)
-
   }
 
 }

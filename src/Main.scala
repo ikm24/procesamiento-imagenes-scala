@@ -48,7 +48,7 @@ object Main {
 
         tryImagenBN match {
           case Success(imagenBN) =>
-            val rutaSalida = "../img/bn_" + new java.io.File(ruta).getName
+            val rutaSalida = "./img/bn_" + new java.io.File(ruta).getName
             if (escribirImagenBMP(imagenBN, rutaSalida)) {
               println(s"Imagen en blanco y negro guardada como: $rutaSalida")
             } else {
@@ -75,7 +75,7 @@ object Main {
             }
             println("No tiene filas vacías ")
             print("Dimensiones imagen pixelada: " + imagenPixelada.ancho + "x" + imagenPixelada.alto)
-            val rutaSalida = "../img/pixelada_" + new java.io.File(ruta).getName
+            val rutaSalida = "./img/pixelada_" + new java.io.File(ruta).getName
             if (escribirImagenBMP(imagenPixelada, rutaSalida)) {
               println(s"Imagen pixelada guardada como: $rutaSalida")
             } else {
