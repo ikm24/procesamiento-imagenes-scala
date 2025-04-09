@@ -6,7 +6,16 @@ import scala.annotation.tailrec
 import scala.util.Try
 object Util {
 
+  /**
+   * Ruta de imagen por defecto
+   */
   val IMAGEN_DEFECTO = "./img/squirtle_squad_BMP_00.bmp"
+  /**
+   * Pixel gris constante para la fase 3
+   * específicamente para los píxeles que no cumplen
+   * la condición
+   */
+  val PIXEL_GRIS = Pixel(128, 128, 128)
 
   /**
    * Clase para representar la estructura de una cabecera de un
@@ -183,6 +192,7 @@ object Util {
    * @tparam A Tipo de elemento
    * @return (List[A]) Lista sin los primeros n elementos de l
    */
+  @tailrec
   def deja[A](n:Int, l:List[A]): List[A] = {
     l match {
       case Nil => Nil
@@ -466,5 +476,182 @@ object Util {
     if (contador > 0) Pixel(rSum / contador, gSum / contador, bSum / contador)
     else Pixel(0, 0, 0)
   }
+
+
+  /**
+   * Evaluar si un píxel es rojo.
+   * @param pixel Píxel a evaluar
+   * @param factorMagnitud Factor de magnitud para la comparación
+   * @param umbral Umbral míino para considerar el color
+   * @return Boolean indica si el píxel es rojo
+   */
+  def esRojo(pixel: Pixel, factorMagnitud: Double, umbral: Int) : Boolean = {
+    pixel.r > (pixel.g * factorMagnitud) && pixel.r > (pixel.b * factorMagnitud) && pixel.r > umbral
+  }
+
+  /**
+   * Evaluar si un píxel es verde.
+   * @param pixel Píxel a evaluar
+   * @param factorMagnitud Factor de magnitud para la comparación
+   * @param umbral Umbral mínimo para considerar el color
+   * @return Boolean indica si el píxel es verde
+   */
+  def esVerde(pixel: Pixel, factorMagnitud: Double, umbral: Int) : Boolean = {
+    pixel.g > (pixel.r * factorMagnitud) && pixel.g > (pixel.b * factorMagnitud) && pixel.g > umbral
+  }
+
+  /**
+   * Evaluar si un píxel es azul.
+   * @param pixel Píxel a evaluar
+   * @param factorMagnitud Factor de magnitud para la comparación
+   * @param umbral Umbral mínimo para considerar el color
+   * @return Boolean indica si el píxel es azul
+   */
+  def esAzul(pixel: Pixel, factorMagnitud: Double, umbral: Int) : Boolean = {
+    pixel.b > (pixel.r * factorMagnitud) && pixel.b > (pixel.g * factorMagnitud) && pixel.b > umbral
+  }
+
+  /**
+   * Función para procesar una fila de píxeles y cuenta los colores
+   * @param fila fila de píxeles originales
+   * @param filaRoja Acumulador para los píxeles rojos procesados
+   * @param filaVerde Acumulador para los píxeles verdes procesados
+   * @param filaAzul Acumulador para los píxeles azules procesados
+   * @param contador Contador de colores actual
+   * @param factoMagnitud Factor de magnitud para la comparación
+   * @param umbral Umbral mímino
+   * @return Tupla con las filas procesadas y el contador actualizado
+   */
+  @tailrec
+  def procesarFilaColores(fila: List[Pixel],
+                          filaRoja: List[Pixel],
+                          filaVerde: List[Pixel],
+                         filaAzul: List[Pixel],
+                          contador: contadorColores,
+                          factoMagnitud: Double,
+                          umbral: Int): (List[Pixel], List[Pixel], List[Pixel], contadorColores) = {
+
+    fila match {
+      case Nil =>
+        (reverse(filaRoja), reverse(filaVerde), reverse(filaAzul), contador)
+      case pixel :: resto => {
+        // Evaluar las condiciones para cada color
+        val esPixelRojo = esRojo(pixel, factoMagnitud, umbral)
+        val esPixelVerde = esVerde(pixel, factoMagnitud, umbral)
+        val esPixelAzul = esAzul(pixel, factoMagnitud, umbral)
+
+        // sActualizar el contador
+        val nuevoRojo = if (esPixelRojo) contador.rojo + 1 else contador.rojo
+        val nuevoVerde = if (esPixelVerde) contador.verde + 1 else contador.verde
+        val nuevoAzul = if (esPixelAzul) contador.azul + 1 else contador.azul
+        val nuevoContador = contador.contador + 1
+
+        // Procesar el pixel para cada imagen de salida
+        val pixelSalidaRojo = if (esPixelRojo) pixel else PIXEL_GRIS
+        val pixelSalidaVerde = if (esPixelVerde) pixel else PIXEL_GRIS
+        val pixelSalidaAzul = if (esPixelAzul) pixel else PIXEL_GRIS
+
+        // Llamar a la función recursiva
+        procesarFilaColores(
+          resto,
+          pixelSalidaRojo :: filaRoja,
+          pixelSalidaVerde :: filaVerde,
+          pixelSalidaAzul :: filaAzul,
+          contadorColores(nuevoRojo, nuevoVerde, nuevoAzul, nuevoContador),
+          factoMagnitud,
+          umbral
+        )
+      }
+    }
+  }
+
+  /**
+   * Función para procesar una imagen completa y contar los colores
+ *
+   * @param fila Lista de filas de píxeles originales
+   * @param acumRojo Acumulador para filas de salida rojas
+   * @param acumVerde Acumulador para filas de salida verdes
+   * @param acumAzul Acumulador para filas de salida azules
+   * @param contador Contador de colores actual
+   * @param factarMagnitud Factor de magnitud para la comparación
+   * @param umbral Umbral mínimo
+   * @return Tupla con las tres imágenes de salida y el contador actualizado
+   */
+  @tailrec
+  def procesarImagenColores(fila: List[List[Pixel]],
+                            acumRojo: List[List[Pixel]],
+                            acumVerde: List[List[Pixel]],
+                            acumAzul: List[List[Pixel]],
+                            contador: contadorColores,
+                            factarMagnitud: Double,
+                            umbral: Int): (List[List[Pixel]], List[List[Pixel]], List[List[Pixel]], contadorColores) = {
+    fila match {
+      case Nil =>
+        (reverseImagen(acumRojo), reverseImagen(acumVerde), reverseImagen(acumAzul), contador)
+      case fila :: resto => {
+        val (filaRoja, filaVerde, filaAzul, contadorActualizado) =
+          procesarFilaColores(fila, Nil, Nil, Nil, contador, factarMagnitud, umbral)
+
+        procesarImagenColores(
+          resto,
+          filaRoja :: acumRojo,
+          filaVerde :: acumVerde,
+          filaAzul :: acumAzul,
+          contadorActualizado,
+          factarMagnitud,
+          umbral
+        )
+      }
+    }
+  }
+
+
+  /**
+   * Función que identifica los colores de una imagen dada
+   * @param imagenData Imagen original en formato ImageData
+   * @param factorMagnitud Factor de magnitud para la comparación
+   * @param umbral Umbral mínimo para considerar el color
+   * @return Tupla con las imágenes filtradas y el contador de colores
+   */
+  def identificarColores(imagenData: ImageData,
+                         factorMagnitud: Double,
+                         umbral: Int) : (ImageData, ImageData, ImageData, contadorColores) = {
+    val contadorInicial = contadorColores(0, 0, 0, 0)
+
+    val (pixelesRojos, pixelesVerdes, pixelesAzules, resultados) =
+      procesarImagenColores(
+        imagenData.pixeles,
+        Nil,
+        Nil,
+        Nil,
+        contadorInicial,
+        factorMagnitud,
+        umbral
+      )
+
+    // Crear una imagen para cada color
+    val imagenRoja = ImageData(imagenData.ancho, imagenData.alto, pixelesRojos)
+    val imagenVerde = ImageData(imagenData.ancho, imagenData.alto, pixelesVerdes)
+    val imagenAzul = ImageData(imagenData.ancho, imagenData.alto, pixelesAzules)
+
+    // Calcular y mostrar estadísticas
+    val total = resultados.contador.toDouble
+    val porcentajeRojo = if (total > 0) (resultados.rojo.toDouble / total) * 100 else 0.0
+    val porcentajeVerde = if (total > 0) (resultados.verde.toDouble / total) * 100 else 0.0
+    val porcentajeAzul = if (total > 0) (resultados.azul.toDouble / total) * 100 else 0.0
+
+    // Imprimir las estadísticas
+    println(s"Análisis de colores completado:")
+    println(s"Factores utilizados: magnitud=${factorMagnitud}, umbral=${umbral}")
+    println(s"Píxeles totales: ${resultados.contador}")
+    println(s"Píxeles rojos: ${resultados.rojo} (${porcentajeRojo.formatted("%.2f")}%)")
+    println(s"Píxeles verdes: ${resultados.verde} (${porcentajeVerde.formatted("%.2f")}%)")
+    println(s"Píxeles azules: ${resultados.azul} (${porcentajeAzul.formatted("%.2f")}%)")
+
+    (imagenRoja, imagenVerde, imagenAzul, resultados)
+  }
+
+
+
 
 }

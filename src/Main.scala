@@ -70,11 +70,11 @@ object Main {
 
         tryImagenPixelada match {
           case Success(imagenPixelada) =>
-            if (imagenPixelada.pixeles.exists(_.isEmpty)) {
-              println("Error: Hay filas vacías en la imagen pixelada.")
-            }
-            println("No tiene filas vacías ")
-            print("Dimensiones imagen pixelada: " + imagenPixelada.ancho + "x" + imagenPixelada.alto)
+//            if (imagenPixelada.pixeles.exists(_.isEmpty)) {
+//              println("Error: Hay filas vacías en la imagen pixelada.")
+//            }
+//            println("No tiene filas vacías ")
+//          println("Dimensiones imagen pixelada: " + imagenPixelada.ancho + "x" + imagenPixelada.alto)
             val rutaSalida = "./img/pixelada_" + new java.io.File(ruta).getName
             if (escribirImagenBMP(imagenPixelada, rutaSalida)) {
               println(s"Imagen pixelada guardada como: $rutaSalida")
@@ -88,7 +88,48 @@ object Main {
 
       }
       case 3 => { // Caso Filtrar Colores
-        println("Opcion 3 elegida")
+        println("Opción 3 elegida")
+        print("Elija el factor de magnitud: ")
+        val factorMagnitud = StdIn.readDouble()
+        print("Elija el umbral: ")
+        val umbral = StdIn.readInt()
+
+        val tryImagenFiltrada: Try[(ImageData, ImageData, ImageData, contadorColores)] = tryImagen match {
+          case Success(imagen) => Success(identificarColores(imagen, factorMagnitud, umbral))
+          case Failure(e) => Failure(new Exception("Error al procesar la imagen", e))
+        }
+
+        tryImagenFiltrada match {
+          case Success((imagenRoja, imagenVerde, imagenAzul, contador)) =>
+            val rutaBase = "./img/"
+            val nombreArchivo = new java.io.File(ruta).getName
+
+            val rutaRoja = rutaBase + "roja_" + nombreArchivo
+            val rutaVerde = rutaBase + "verde_" + nombreArchivo
+            val rutaAzul = rutaBase + "azul_" + nombreArchivo
+
+            if (escribirImagenBMP(imagenRoja, rutaRoja)) {
+              println(s"Imagen filtrada roja guardada como: $rutaRoja")
+            } else {
+              println("Error al guardar la imagen roja")
+            }
+
+            if (escribirImagenBMP(imagenVerde, rutaVerde)) {
+              println(s"Imagen filtrada verde guardada como: $rutaVerde")
+            } else {
+              println("Error al guardar la imagen verde")
+            }
+
+            if (escribirImagenBMP(imagenAzul, rutaAzul)) {
+              println(s"Imagen filtrada azul guardada como: $rutaAzul")
+            } else {
+              println("Error al guardar la imagen azul")
+            }
+
+          case Failure(e) =>
+            println(s"Error al procesar la imagen: ${e.getMessage}")
+        }
+
       }
       case 4 => { // Salir
         println("Saliendo...")
