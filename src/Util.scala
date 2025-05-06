@@ -652,6 +652,47 @@ object Util {
   }
 
 
+  /**
+   * Función para extraer el nombre de la imagen de una ruta
+   * @param ruta (String) Ruta de la imagen
+   * @return (String) Nombre de la imagen
+   */
+  def extraer_nombre_imagen(ruta: String): String = {
+    return ruta.substring(6)
+  }
+
+  /**
+   * Función para contar los colores en una imagen
+   * @param imagenData Imagen original en formato ImageData
+   * @return contadorColores Contador de colores (R, G, B)
+   */
+  def contarColoresRGB(imagenData: ImageData): contadorColores = {
+    @tailrec
+    def contarFila(fila: List[Pixel], contador: contadorColores): contadorColores = {
+      fila match {
+        case Nil => contador
+        case Pixel(r, g, b) :: tail =>
+          val nuevoRojo = if (r > g && r > b) contador.rojo + 1 else contador.rojo
+          val nuevoVerde = if (g > r && g > b) contador.verde + 1 else contador.verde
+          val nuevoAzul = if (b > r && b > g) contador.azul + 1 else contador.azul
+          contarFila(tail, contadorColores(nuevoRojo, nuevoVerde, nuevoAzul, contador.contador + 1))
+      }
+    }
+
+    @tailrec
+    def contarFilas(filas: List[List[Pixel]], contador: contadorColores): contadorColores = {
+      filas match {
+        case Nil => contador
+        case head :: tail =>
+          val contadorActualizado = contarFila(head, contador)
+          contarFilas(tail, contadorActualizado)
+      }
+    }
+
+    contarFilas(imagenData.pixeles, contadorColores(0, 0, 0, 0))
+  }
+
+
 
 
 }
