@@ -261,7 +261,7 @@ object Util {
   }
 
   /**
-   * Método para guardar una imagen tipo BMP
+   * Función para guardar una imagen tipo BMP
    * @param imagenData Los datos de la imagen a guardar
    * @param rutaDestino La ruta donde guardar la imagen
    * @return (Boolean) False en caso de error
@@ -273,7 +273,6 @@ object Util {
         imagenData.alto,
         BufferedImage.TYPE_INT_RGB
       )
-
       // Función tail-rec para procesar filas
       @tailrec
       def procesarFilas(y: Int): Unit = {
@@ -282,7 +281,6 @@ object Util {
           procesarFilas(y + 1)
         }
       }
-
       // Función tail-rec para procesar píxeles en una fila
       @tailrec
       def procesarPixelesEnFila(y: Int, x: Int): Unit = {
@@ -293,10 +291,8 @@ object Util {
           procesarPixelesEnFila(y, x + 1)
         }
       }
-
       // Inicia el procesamiento desde la fila 0
       procesarFilas(0)
-
       // Guarda la imagen
       ImageIO.write(bufferedImage, "bmp", new File(rutaDestino))
     }.isSuccess
@@ -393,7 +389,8 @@ object Util {
      * @return Lista de listas de píxeles con los bloques expandidos.
      */
     @tailrec
-    def expandirImagenPixelada(coloresPromedio: List[List[Pixel]], accFilas: List[List[Pixel]] = Nil): List[List[Pixel]] = {
+    def expandirImagenPixelada(coloresPromedio: List[List[Pixel]],
+                               accFilas: List[List[Pixel]] = Nil): List[List[Pixel]] = {
       coloresPromedio match {
         case Nil => accFilas
         case filaColores :: restoFilas =>
@@ -404,12 +401,13 @@ object Util {
 
     /**
      * Expande los colores promedio a bloques completos en la imagen.
-     * @param coloresPromedio Lista de colores promedio por bloque.
+     * @param filaColores Lista de colores promedio por bloque.
      * @param accFilas Acumulador de filas expandidas.
      * @return Lista de listas de píxeles con los bloques expandidos.
      */
     @tailrec
-    def expandirFilaVertical(filaColores: List[Pixel], alturaRestante: Int, accFilas: List[List[Pixel]]): List[List[Pixel]] = {
+    def expandirFilaVertical(filaColores: List[Pixel], alturaRestante: Int,
+                             accFilas: List[List[Pixel]]): List[List[Pixel]] = {
       if (alturaRestante <= 0) accFilas
       else {
         val filaExpandida = expandirFilaHorizontal(filaColores, Nil)
@@ -455,13 +453,13 @@ object Util {
 
   /**
    * Calcula el color promedio de un bloque de píxeles en la imagen.
-   * @param startX Coordenada X inicial del bloque.
-   * @param startY Coordenada Y inicial del bloque.
-   * @param tamano Tamaño del bloque (en píxeles).
+   * @param startX     Coordenada X inicial del bloque.
+   * @param startY     Coordenada Y inicial del bloque.
    * @param imagenData Datos de la imagen original.
    * @return Pixel con el color promedio del bloque.
    */
-  def calcularColorMedioBloque(startX: Int, startY: Int, bloqueAncho: Int, bloqueAlto: Int, imagenData: ImageData): Pixel = {
+  def calcularColorMedioBloque(startX: Int, startY: Int, bloqueAncho: Int, bloqueAlto: Int,
+                               imagenData: ImageData): Pixel = {
     @tailrec
     def sumaBloque(y: Int, x: Int, rSum: Int, gSum: Int, bSum: Int, contador: Int): (Int, Int, Int, Int) = {
       if (y >= startY + bloqueAlto) (rSum, gSum, bSum, contador)
@@ -488,7 +486,6 @@ object Util {
   def esRojo(pixel: Pixel, factorMagnitud: Double, umbral: Int) : Boolean = {
     pixel.r > (pixel.g * factorMagnitud) && pixel.r > (pixel.b * factorMagnitud) && pixel.r > umbral
   }
-
   /**
    * Evaluar si un píxel es verde.
    * @param pixel Píxel a evaluar
@@ -499,7 +496,6 @@ object Util {
   def esVerde(pixel: Pixel, factorMagnitud: Double, umbral: Int) : Boolean = {
     pixel.g > (pixel.r * factorMagnitud) && pixel.g > (pixel.b * factorMagnitud) && pixel.g > umbral
   }
-
   /**
    * Evaluar si un píxel es azul.
    * @param pixel Píxel a evaluar
