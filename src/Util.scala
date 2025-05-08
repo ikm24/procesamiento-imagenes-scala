@@ -664,17 +664,23 @@ object Util {
   /**
    * Función para contar los colores en una imagen
    * @param imagenData Imagen original en formato ImageData
+   * @param factorMagnitud Factor de magnitud para la comparación
+   * @param umbral Umbral para la comparación
    * @return contadorColores Contador de colores (R, G, B)
    */
-  def contarColoresRGB(imagenData: ImageData): contadorColores = {
+  def contarColoresRGB(imagenData: ImageData,
+                       factorMagnitud: Option[Double] = None,
+                       umbral: Option[Int] = None): contadorColores = {
+
+
     @tailrec
     def contarFila(fila: List[Pixel], contador: contadorColores): contadorColores = {
       fila match {
         case Nil => contador
-        case Pixel(r, g, b) :: tail =>
-          val nuevoRojo = if (r > g && r > b) contador.rojo + 1 else contador.rojo
-          val nuevoVerde = if (g > r && g > b) contador.verde + 1 else contador.verde
-          val nuevoAzul = if (b > r && b > g) contador.azul + 1 else contador.azul
+        case p :: tail =>
+          val nuevoRojo = if (esRojo(p, factorMagnitud.getOrElse(1.5), umbral.getOrElse(150))) contador.rojo + 1 else contador.rojo
+          val nuevoVerde = if (esVerde(p, factorMagnitud.getOrElse(1), umbral.getOrElse(120))) contador.verde + 1 else contador.verde
+          val nuevoAzul = if (esAzul(p, factorMagnitud.getOrElse(1), umbral.getOrElse(120))) contador.azul + 1 else contador.azul
           contarFila(tail, contadorColores(nuevoRojo, nuevoVerde, nuevoAzul, contador.contador + 1))
       }
     }

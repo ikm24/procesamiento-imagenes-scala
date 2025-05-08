@@ -2,6 +2,7 @@ import Util_Cloud._
 import Util._
 
 import scala.io.StdIn
+import scala.runtime.Nothing$
 import scala.util.{Failure, Success, Try}
 
 object Main {
@@ -53,11 +54,12 @@ object Main {
    * @param rutaSalida Ruta donde se guardó la imagen procesada.
    * @param tipo_operacion Tipo de operación realizada (Blanco y Negro, Pixelado, etc.).
    */
-  def manejarSubidaCloud(imagen: ImageData, rutaSalida: String, tipoOperacion: String, nombreUsuario: String): Unit = {
+  def manejarSubidaCloud(imagen: ImageData, rutaSalida: String, tipoOperacion: String,
+                         nombreUsuario: String, factorMagnitud : Option[Double], umbral: Option[Int]): Unit = {
 
 
     // Contar los píxeles de cada color
-    val contador = contarColoresRGB(imagen)
+    val contador = contarColoresRGB(imagen,factorMagnitud, umbral)
     val nombreImagen = extraer_nombre_imagen(rutaSalida)
     println(s"Colores contados en la imagen:")
     println(s"Rojo: ${contador.rojo}")
@@ -110,15 +112,13 @@ object Main {
 
               if(preguntar_subir_cloud()){
                 val nombreUsuario = preguntar_nombre_usuario()
-                manejarSubidaCloud(imagenBN, rutaSalida, tipo_operacion, nombreUsuario)
+                manejarSubidaCloud(imagenBN, rutaSalida, tipo_operacion, nombreUsuario, None, None)
               }
             }
 
           case Failure(e) =>
             println(s"Error al procesar la imagen: ${e.getMessage}")
         }
-
-
       }
       case 2 => { // Caso Pixelar
         tipo_operacion = "Pixelado"
@@ -141,7 +141,7 @@ object Main {
             if(preguntar_subir_cloud()){
               // Preguntar el nombre de usuario
               val nombreUsuario = preguntar_nombre_usuario()
-              manejarSubidaCloud(imagenPixelada, rutaSalida, tipo_operacion, nombreUsuario)
+              manejarSubidaCloud(imagenPixelada, rutaSalida, tipo_operacion, nombreUsuario, None, None)
             }
           }
 
@@ -194,11 +194,11 @@ object Main {
               // Preguntar el nombre de usuario
               val nombreUsuario = preguntar_nombre_usuario()
               // Para la imagen roja
-              manejarSubidaCloud(imagenRoja, rutaRoja, tipo_operacion, nombreUsuario)
+              manejarSubidaCloud(imagenRoja, rutaRoja, tipo_operacion, nombreUsuario, Some(factorMagnitud), Some(umbral))
               // Para la imagen verde
-              manejarSubidaCloud(imagenVerde, rutaVerde, tipo_operacion, nombreUsuario)
+              manejarSubidaCloud(imagenVerde, rutaVerde, tipo_operacion, nombreUsuario, Some(factorMagnitud), Some(umbral))
               // Para la imagen azul
-              manejarSubidaCloud(imagenAzul, rutaAzul, tipo_operacion, nombreUsuario)
+              manejarSubidaCloud(imagenAzul, rutaAzul, tipo_operacion, nombreUsuario, Some(factorMagnitud), Some(umbral))
             }
           }
 
