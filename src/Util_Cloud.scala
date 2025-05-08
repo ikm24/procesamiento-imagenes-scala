@@ -56,37 +56,4 @@ object Util_Cloud {
     }
   }
 
-//  def publicarRestaurante(): Unit = {
-//    val url = new URL("http://msdocs-python-postgres-001-hrenasdzhmhgagh6.canadacentral-01.azurewebsites.net/add")
-//    val connection = url.openConnection().asInstanceOf[HttpURLConnection]
-//
-//    connection.setRequestMethod("POST")
-//    connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-//    connection.setDoOutput(true)
-//
-//    // Generar los parámetros de forma dinámica
-//    val params = Map(
-//      "usuario" -> "Zaki",
-//      "imagen" -> "imagenPrueba2.bmp",
-//      "tipo" -> "pixelado",
-//      "pixelesR" -> "2",
-//      "pixelesG" -> "2",
-//      "pixelesB" -> "2"
-//    )
-//
-//    val encodedParams = params.map { case (key, value) =>
-//      s"${URLEncoder.encode(key, StandardCharsets.UTF_8)}=${URLEncoder.encode(value, StandardCharsets.UTF_8)}"
-//    }.mkString("&")
-//
-//    val outputStream: OutputStream = connection.getOutputStream
-//    outputStream.write(encodedParams.getBytes(StandardCharsets.UTF_8))
-//    outputStream.close()
-//
-//    val responseCode = connection.getResponseCode
-//    if (responseCode == HttpURLConnection.HTTP_OK || responseCode == HttpURLConnection.HTTP_CREATED) {
-//      println("Restaurante registrado con éxito.")
-//    } else {
-//      println(s"Error al registrar restaurante. Código de respuesta: $responseCode")
-//    }
-//  }
 }
