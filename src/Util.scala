@@ -658,7 +658,8 @@ object Util {
    * @return (String) Nombre de la imagen
    */
   def extraer_nombre_imagen(ruta: String): String = {
-    return ruta.substring(6)
+    val indiceUltimaBarra = ruta.lastIndexOf("/")
+    if (indiceUltimaBarra != -1) ruta.substring(indiceUltimaBarra + 1) else ruta
   }
 
   /**
@@ -678,9 +679,12 @@ object Util {
       fila match {
         case Nil => contador
         case p :: tail =>
-          val nuevoRojo = if (esRojo(p, factorMagnitud.getOrElse(1.5), umbral.getOrElse(150))) contador.rojo + 1 else contador.rojo
-          val nuevoVerde = if (esVerde(p, factorMagnitud.getOrElse(1), umbral.getOrElse(120))) contador.verde + 1 else contador.verde
-          val nuevoAzul = if (esAzul(p, factorMagnitud.getOrElse(1), umbral.getOrElse(120))) contador.azul + 1 else contador.azul
+          val nuevoRojo = if (esRojo(p, factorMagnitud.getOrElse(1.5),
+            umbral.getOrElse(150))) contador.rojo + 1 else contador.rojo
+          val nuevoVerde = if (esVerde(p, factorMagnitud.getOrElse(1),
+            umbral.getOrElse(120))) contador.verde + 1 else contador.verde
+          val nuevoAzul = if (esAzul(p, factorMagnitud.getOrElse(1),
+            umbral.getOrElse(120))) contador.azul + 1 else contador.azul
           contarFila(tail, contadorColores(nuevoRojo, nuevoVerde, nuevoAzul, contador.contador + 1))
       }
     }

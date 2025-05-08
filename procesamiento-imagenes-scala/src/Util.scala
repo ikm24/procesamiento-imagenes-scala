@@ -647,6 +647,10 @@ object Util {
     (imagenRoja, imagenVerde, imagenAzul, resultados)
   }
 
+  def extraer_nombre_imagen(ruta: String): String = {
+    val indiceUltimaBarra = ruta.lastIndexOf("/")
+    if (indiceUltimaBarra != -1) ruta.substring(indiceUltimaBarra + 1) else ruta
+  }
 
 
 
